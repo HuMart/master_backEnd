@@ -1,5 +1,9 @@
 'use strict'
 
+var validator = require('validator');
+var User = require("../Models/users");
+let bcrypt = require('bcryptjs');
+
 var userController = {
     // TESTING METHODS
     test: (req, res) => {
@@ -15,9 +19,62 @@ var userController = {
     /////////////////////////
 
     save: (req, res) => {
-        return res.status(200).send({
-            message: "User registered"
-        });
+        let params = req.body;
+        let validate_name = !validator.isEmpty(params.name);
+        let validate_lastName = !validator.isEmpty(params.lastName);
+        let validate_email = !validator.isEmpty(params.email) && validator.isEmail(params.email);
+        let validate_password = !validator.isEmpty(params.password);
+
+        if (validate_name && validate_lastName && validate_email && validate_password) {
+            let user = new User();
+
+            user.name = params.name;
+            user.lastName = params.lastName;
+            user.email = params.email.toLowerCase();
+            user.role = 'ROLE_USER';
+            user.avatar = null;
+
+            User.findOne({ email: user.email }, (err, userExist) => {
+                if (err) {
+                    return res.status(500).send({
+                        message: "Error checking user!"
+                    });
+                }
+                if (!userExist) {
+                    bcrypt.genSalt(10, (err, salt) => {
+                        bcrypt.hash(params.password, salt, (err, hash) => {
+                            user.password = hash;
+                            user.save((err, userSaved) => {
+                                if (err) {
+                                    return res.status(500).send({
+                                        message: "Error saving the user"
+                                    });
+                                }
+                                if (!userSaved) {
+                                    return res.status(400).send({
+                                        message: "User not saved"
+                                    });
+                                }
+
+                                return res.status(200).send({ user: userSaved })
+
+                            });
+                        });
+                    });
+
+                }
+                else {
+                    return res.status(200).send({
+                        message: "That User already exist. Try Again"
+                    });
+                }
+            });
+        }
+        else {
+            return res.status(200).send({
+                message: "Userd data is not valid, try again"
+            });
+        }
     },
 };
 
