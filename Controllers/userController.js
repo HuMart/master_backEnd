@@ -3,6 +3,7 @@
 var validator = require('validator');
 var User = require("../Models/users");
 let bcrypt = require('bcryptjs');
+let jwt = require('../Services/jwt');
 
 var userController = {
     // TESTING METHODS
@@ -56,10 +57,10 @@ var userController = {
                                     });
                                 }
 
-                                return res.status(200).send({ 
+                                return res.status(200).send({
                                     status: "success",
                                     user: userSaved
-                                 });
+                                });
 
                             });
                         });
@@ -82,22 +83,55 @@ var userController = {
 
     login: (req, res) => {
         // GET PARAMS OF THE REQUEST
-
+        let params = req.body;
         // VALIDATE DATA
+        let validate_email = !validator.isEmpty(params.email) && validator.isEmail(params.email);
+        let validate_password = !validator.isEmpty(params.password);
 
+        if (!validate_email || !validate_password) {
+            return res.status(200).send({
+                message: "Missing user or password"
+            });
+        }
         // SEARCH FOR USER BY THE EMAIL
+        User.findOne({ email: params.email.toLowerCase() }, (err, userFound) => {
+            if (err) {
+                return res.status(500).send({
+                    message: "Error in the login",
+                });
+            }
 
-        // IF FOUND
+            if (!userFound) {
+                return res.status(404).send({
+                    message: "User not found",
+                });
+            }
+            // IF FOUND    
+            // VALIDATE PASSWORD
+            bcrypt.compare(params.password, userFound.password, (err, check) => {
+                // IF IS RIGHT
+                if (check) {
+                    // GENERATE TOKEN WITH JWT
+                    if (params.getToken) {
+                        return res.status(200).send({
+                            token: jwt.createToken(userFound)
+                        });
+                    } else {
+                        // CLEAN OBJECT BEFORE RETURNING
+                        userFound.password = undefined;
+                        // RETURN DATA
+                        return res.status(200).send({
+                            statuss: 'success',
+                            userFound
+                        });
+                    }
 
-        // VALIDATE PASSWORD
-
-        // IF IS RIGHT
-
-        // GENERATE TOKEN WITH JWT
-
-        // RETURN DATA
-        return res.status(200).send({
-            message: "login method connecting"
+                } else {
+                    return res.status(404).send({
+                        message: "User or password doesn't match any existing user"
+                    });
+                }
+            });
         });
     },
 };
