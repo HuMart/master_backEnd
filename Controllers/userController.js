@@ -56,7 +56,10 @@ var userController = {
                                     });
                                 }
 
-                                return res.status(200).send({ user: userSaved })
+                                return res.status(200).send({ 
+                                    status: "success",
+                                    user: userSaved
+                                 });
 
                             });
                         });
@@ -75,6 +78,27 @@ var userController = {
                 message: "Userd data is not valid, try again"
             });
         }
+    },
+
+    login: (req, res) => {
+        // GET PARAMS OF THE REQUEST
+
+        // VALIDATE DATA
+
+        // SEARCH FOR USER BY THE EMAIL
+
+        // IF FOUND
+
+        // VALIDATE PASSWORD
+
+        // IF IS RIGHT
+
+        // GENERATE TOKEN WITH JWT
+
+        // RETURN DATA
+        return res.status(200).send({
+            message: "login method connecting"
+        });
     },
 };
 
