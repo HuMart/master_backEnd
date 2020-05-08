@@ -134,6 +134,15 @@ var userController = {
             });
         });
     },
+
+    update: (req, res) => {
+        // GET PARAMS
+
+        // 
+        return res.status(200).send({
+            message: " testing update route"
+        });
+    },
 };
 
 module.exports = userController;

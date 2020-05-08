@@ -13,6 +13,8 @@ router.post('/register', userController.save);
 
 router.post('/login', userController.login);
 
+router.put('/update', userController.update);
+
 
 
 module.exports = router;
