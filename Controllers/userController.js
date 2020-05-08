@@ -136,8 +136,8 @@ var userController = {
     },
 
     update: (req, res) => {
-        // GET PARAMS
-
+        // CREATE MIDDLEWARE TO VALIDATE TOKEN OF THE USER
+        
         // 
         return res.status(200).send({
             message: " testing update route"
