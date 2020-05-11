@@ -2,8 +2,10 @@
 
 var validator = require('validator');
 var User = require("../Models/users");
-let bcrypt = require('bcryptjs');
-let jwt = require('../Services/jwt');
+var bcrypt = require('bcryptjs');
+var jwt = require('../Services/jwt');
+var fs = require('fs');
+var path = require('path');
 
 var userController = {
     // TESTING METHODS
@@ -20,14 +22,21 @@ var userController = {
     /////////////////////////
 
     save: (req, res) => {
-        let params = req.body;
-        let validate_name = !validator.isEmpty(params.name);
-        let validate_lastName = !validator.isEmpty(params.lastName);
-        let validate_email = !validator.isEmpty(params.email) && validator.isEmail(params.email);
-        let validate_password = !validator.isEmpty(params.password);
+        try {
+            var params = req.body;
+            var validate_name = !validator.isEmpty(params.name);
+            var validate_lastName = !validator.isEmpty(params.lastName);
+            var validate_email = !validator.isEmpty(params.email) && validator.isEmail(params.email);
+            var validate_password = !validator.isEmpty(params.password);
+
+        } catch (err) {
+            return res.status(404).send({
+                message: "Error validating data, missing data"
+            });
+        }
 
         if (validate_name && validate_lastName && validate_email && validate_password) {
-            let user = new User();
+            var user = new User();
 
             user.name = params.name;
             user.lastName = params.lastName;
@@ -83,10 +92,17 @@ var userController = {
 
     login: (req, res) => {
         // GET PARAMS OF THE REQUEST
-        let params = req.body;
+        var params = req.body;
         // VALIDATE DATA
-        let validate_email = !validator.isEmpty(params.email) && validator.isEmail(params.email);
-        let validate_password = !validator.isEmpty(params.password);
+        try {
+            var validate_email = !validator.isEmpty(params.email) && validator.isEmail(params.email);
+            var validate_password = !validator.isEmpty(params.password);
+        } catch (err) {
+            return res.status(404).send({
+                message: "Error validating data, missing data"
+            });
+        }
+
 
         if (!validate_email || !validate_password) {
             return res.status(200).send({
@@ -135,13 +151,118 @@ var userController = {
         });
     },
 
-    update: (req, res) => {
-        // CREATE MIDDLEWARE TO VALIDATE TOKEN OF THE USER
-        
-        // 
-        return res.status(200).send({
-            message: " testing update route"
-        });
+    update: function (req, res) {
+
+        // GET PARAMS OF THE USER
+        var params = req.body;
+
+        // VALIDATE DATA
+        try {
+            var validate_name = !validator.isEmpty(params.name);
+            var validate_lastName = !validator.isEmpty(params.lastName);
+            var validate_email = !validator.isEmpty(params.email) && validator.isEmail(params.email);
+        } catch (err) {
+            return res.status(404).send({
+                message: 'Error validating data, missing data'
+            });
+        }
+
+        // ELIMINATE UNNECESARY PROPS
+        delete params.password;
+        var userId = req.user.sub;
+
+        // VALIDATE UNIC EMAIL
+        if (req.user.email != params.email) {
+            User.findOne({ email: params.email.toLowerCase() }, (err, userFound) => {
+                if (err) {
+                    return res.status(500).send({
+                        message: "Error in the login",
+                    });
+                }
+
+                if (userFound && userFound.email == params.email) {
+                    return res.status(200).send({
+                        message: "That email is already in use",
+                    });
+                }
+            });
+        } else {
+
+            // FIND AND UPDATE
+            User.findOneAndUpdate({ _id: userId }, params, { new: true }, (err, userUpdated) => {
+
+                if (err) {
+                    return res.status(500).send({
+                        status: 'error',
+                        message: 'error updating the user'
+                    });
+                }
+
+                if (!userUpdated) {
+                    return res.status(500).send({
+                        status: 'error',
+                        message: 'error Nothing to update'
+                    });
+                }
+
+                // RETURN RESPONSE
+                return res.status(200).send({
+                    status: 'success',
+                    user: userUpdated
+                });
+            });
+        }
+
+    },
+
+    uploadAvatar: function (req, res) {
+
+        var fileName = 'Avatar not uploaded...';
+
+        if (!req.files) {
+            return res.status(404).send({
+                status: 'error',
+                message: file_name
+            });
+        }
+        // GET FILE FROM REQUEST
+        var filePath = req.files.file0.path;
+        var fileSplit = filePath.split('\\'); // WARNING: EN LINUX OR MAC var fileSplit = filePath.split('/');
+        var fileName = fileSplit[2];
+        var extSplit = fileName.split('\.');
+        var fileExtension = extSplit[1];
+
+        // CHECK EXTENSION "ONLY IMAGES" IF NOT VALID: DELETE FILE
+        if (fileExtension != 'png' && fileExtension != 'jpg' && fileExtension != 'jpeg' && fileExtension != 'gif') {
+            fs.unlink(filePath, (err) => {
+                return res.status(400).send({
+                    status: 'error',
+                    message: 'that file is not supported'
+                })
+            })
+        } else {
+            // CHECK ID OF THE USER IDENTIFIED
+            var userId = req.user.sub;
+
+            // SEARCH AND UPDATE THE OBJECT IN DB
+            User.findOneAndUpdate({ _id: userId }, { avatar: fileName }, { new: true }, (err, userUpdated) => {
+                if(err || !userUpdated){
+                    return res.status(500).send({
+                        status: 'error',
+                        message: 'Error uploading the image'
+                    });
+                }
+                return res.status(200).send({
+                    status: 'success',
+                    message: 'avatar uploaded',
+                    user: userUpdated
+                });
+            });
+
+
+
+        }
+
     },
 };
 
