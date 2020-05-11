@@ -149,11 +149,11 @@ var userController = {
         });
     },
 
-    update: function(req, res)  {
+    update: function (req, res) {
 
         // GET PARAMS OF THE USER
         var params = req.body;
-        console.log(params);
+
         // VALIDATE DATA
         try {
             var validate_name = !validator.isEmpty(params.name);
@@ -167,32 +167,49 @@ var userController = {
 
         // ELIMINATE UNNECESARY PROPS
         delete params.password;
-        // FIND AND UPDATE
-
         var userId = req.user.sub;
-        console.log(userId);
-        
-        User.findOneAndUpdate({_id: userId }, params, { new: true }, (err, userUpdated) => {
 
-            if(err){
-                return res.status(500).send({
-                    status: 'error',
-                    message: 'error updating the user'
-                });
-            }
+        // VALIDATE UNIC EMAIL
+        if (req.user.email != params.email) {
+            User.findOne({ email: params.email.toLowerCase() }, (err, userFound) => {
+                if (err) {
+                    return res.status(500).send({
+                        message: "Error in the login",
+                    });
+                }
 
-            if(!userUpdated){
-                return res.status(500).send({
-                    status: 'error',
-                    message: 'error Nothing to update'
-                });
-            }
-            // RETURN RESPONSE
-            return res.status(200).send({
-                status: 'success',
-                user: userUpdated
+                if (userFound && userFound.email == params.email) {
+                    return res.status(200).send({
+                        message: "That email is already in use",
+                    });
+                }
             });
-        });
+        } else {
+
+            // FIND AND UPDATE
+            User.findOneAndUpdate({ _id: userId }, params, { new: true }, (err, userUpdated) => {
+
+                if (err) {
+                    return res.status(500).send({
+                        status: 'error',
+                        message: 'error updating the user'
+                    });
+                }
+
+                if (!userUpdated) {
+                    return res.status(500).send({
+                        status: 'error',
+                        message: 'error Nothing to update'
+                    });
+                }
+
+                // RETURN RESPONSE
+                return res.status(200).send({
+                    status: 'success',
+                    user: userUpdated
+                });
+            });
+        }
 
     },
 };
