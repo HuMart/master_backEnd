@@ -24,6 +24,8 @@ router.get('/avatar/:fileName', userController.avatar);
 
 router.get('/users', userController.getUsers);
 
+router.get('/user/:userId', userController.getUser);
+
 
 
 module.exports = router;

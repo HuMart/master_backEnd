@@ -299,7 +299,19 @@ var userController = {
     },
 
     getUser: (req, res) => {
-
+        var userId = req.params.userId;
+        User.findById(userId).exec((err, user) => {
+            if(err || !user){
+                return res.status(404).send({
+                    status: 'error',
+                    message: "user doesn't exist"
+                });
+            }
+            return res.status(200).send({
+                status: 'success',
+                user
+            });
+        });
     },
 };
 
