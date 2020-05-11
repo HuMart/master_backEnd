@@ -2,8 +2,8 @@
 
 var validator = require('validator');
 var User = require("../Models/users");
-let bcrypt = require('bcryptjs');
-let jwt = require('../Services/jwt');
+var bcrypt = require('bcryptjs');
+var jwt = require('../Services/jwt');
 
 var userController = {
     // TESTING METHODS
@@ -20,14 +20,21 @@ var userController = {
     /////////////////////////
 
     save: (req, res) => {
-        let params = req.body;
-        let validate_name = !validator.isEmpty(params.name);
-        let validate_lastName = !validator.isEmpty(params.lastName);
-        let validate_email = !validator.isEmpty(params.email) && validator.isEmail(params.email);
-        let validate_password = !validator.isEmpty(params.password);
+        try {
+            var params = req.body;
+            var validate_name = !validator.isEmpty(params.name);
+            var validate_lastName = !validator.isEmpty(params.lastName);
+            var validate_email = !validator.isEmpty(params.email) && validator.isEmail(params.email);
+            var validate_password = !validator.isEmpty(params.password);
+
+        } catch (err) {
+            return res.status(404).send({
+                message: "Error validating data, missing data"
+            });
+        }
 
         if (validate_name && validate_lastName && validate_email && validate_password) {
-            let user = new User();
+            var user = new User();
 
             user.name = params.name;
             user.lastName = params.lastName;
@@ -83,10 +90,17 @@ var userController = {
 
     login: (req, res) => {
         // GET PARAMS OF THE REQUEST
-        let params = req.body;
+        var params = req.body;
         // VALIDATE DATA
-        let validate_email = !validator.isEmpty(params.email) && validator.isEmail(params.email);
-        let validate_password = !validator.isEmpty(params.password);
+        try {
+            var validate_email = !validator.isEmpty(params.email) && validator.isEmail(params.email);
+            var validate_password = !validator.isEmpty(params.password);
+        } catch (err) {
+            return res.status(404).send({
+                message: "Error validating data, missing data"
+            });
+        }
+
 
         if (!validate_email || !validate_password) {
             return res.status(200).send({
@@ -135,13 +149,51 @@ var userController = {
         });
     },
 
-    update: (req, res) => {
-        // CREATE MIDDLEWARE TO VALIDATE TOKEN OF THE USER
+    update: function(req, res)  {
+
+        // GET PARAMS OF THE USER
+        var params = req.body;
+        console.log(params);
+        // VALIDATE DATA
+        try {
+            var validate_name = !validator.isEmpty(params.name);
+            var validate_lastName = !validator.isEmpty(params.lastName);
+            var validate_email = !validator.isEmpty(params.email) && validator.isEmail(params.email);
+        } catch (err) {
+            return res.status(404).send({
+                message: 'Error validating data, missing data'
+            });
+        }
+
+        // ELIMINATE UNNECESARY PROPS
+        delete params.password;
+        // FIND AND UPDATE
+
+        var userId = req.user.sub;
+        console.log(userId);
         
-        // 
-        return res.status(200).send({
-            message: " testing update route"
+        User.findOneAndUpdate({_id: userId }, params, { new: true }, (err, userUpdated) => {
+
+            if(err){
+                return res.status(500).send({
+                    status: 'error',
+                    message: 'error updating the user'
+                });
+            }
+
+            if(!userUpdated){
+                return res.status(500).send({
+                    status: 'error',
+                    message: 'error Nothing to update'
+                });
+            }
+            // RETURN RESPONSE
+            return res.status(200).send({
+                status: 'success',
+                user: userUpdated
+            });
         });
+
     },
 };
 
