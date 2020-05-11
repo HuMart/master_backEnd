@@ -264,6 +264,22 @@ var userController = {
         }
 
     },
+
+    avatar: (req, res) => {
+        var fileName = req.params.fileName;
+        
+        var filePath = './Uploads/users/'+fileName;
+
+        fs.exists(filePath, (exists) => {
+            if(exists){
+                return res.sendFile(path.resolve(filePath));
+            }else{
+                return res.status(404).send({
+                    message: "Image doesn't exist"
+                })
+            }
+        });
+    },
 };
 
 module.exports = userController;
