@@ -246,7 +246,7 @@ var userController = {
 
             // SEARCH AND UPDATE THE OBJECT IN DB
             User.findOneAndUpdate({ _id: userId }, { avatar: fileName }, { new: true }, (err, userUpdated) => {
-                if(err || !userUpdated){
+                if (err || !userUpdated) {
                     return res.status(500).send({
                         status: 'error',
                         message: 'Error uploading the image'
@@ -267,18 +267,39 @@ var userController = {
 
     avatar: (req, res) => {
         var fileName = req.params.fileName;
-        
-        var filePath = './Uploads/users/'+fileName;
+
+        var filePath = './Uploads/users/' + fileName;
 
         fs.exists(filePath, (exists) => {
-            if(exists){
+            if (exists) {
                 return res.sendFile(path.resolve(filePath));
-            }else{
+            } else {
                 return res.status(404).send({
                     message: "Image doesn't exist"
                 })
             }
         });
+    },
+
+    getUsers: (req, res) => {
+        User.find().exec((err, users) => {
+            if (err || !users) {
+                return res.status(404).send({
+                    status: 'error',
+                    message: 'not users to show'
+                });
+
+            }
+            return res.status(200).send({
+                status: 'success',
+                users
+            });
+        });
+
+    },
+
+    getUser: (req, res) => {
+
     },
 };
 
