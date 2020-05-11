@@ -4,6 +4,8 @@ var validator = require('validator');
 var User = require("../Models/users");
 var bcrypt = require('bcryptjs');
 var jwt = require('../Services/jwt');
+var fs = require('fs');
+var path = require('path');
 
 var userController = {
     // TESTING METHODS
@@ -209,6 +211,56 @@ var userController = {
                     user: userUpdated
                 });
             });
+        }
+
+    },
+
+    uploadAvatar: function (req, res) {
+
+        var fileName = 'Avatar not uploaded...';
+
+        if (!req.files) {
+            return res.status(404).send({
+                status: 'error',
+                message: file_name
+            });
+        }
+        // GET FILE FROM REQUEST
+        var filePath = req.files.file0.path;
+        var fileSplit = filePath.split('\\'); // WARNING: EN LINUX OR MAC var fileSplit = filePath.split('/');
+        var fileName = fileSplit[2];
+        var extSplit = fileName.split('\.');
+        var fileExtension = extSplit[1];
+
+        // CHECK EXTENSION "ONLY IMAGES" IF NOT VALID: DELETE FILE
+        if (fileExtension != 'png' && fileExtension != 'jpg' && fileExtension != 'jpeg' && fileExtension != 'gif') {
+            fs.unlink(filePath, (err) => {
+                return res.status(400).send({
+                    status: 'error',
+                    message: 'that file is not supported'
+                })
+            })
+        } else {
+            // CHECK ID OF THE USER IDENTIFIED
+            var userId = req.user.sub;
+
+            // SEARCH AND UPDATE THE OBJECT IN DB
+            User.findOneAndUpdate({ _id: userId }, { avatar: fileName }, { new: true }, (err, userUpdated) => {
+                if(err || !userUpdated){
+                    return res.status(500).send({
+                        status: 'error',
+                        message: 'Error uploading the image'
+                    });
+                }
+                return res.status(200).send({
+                    status: 'success',
+                    message: 'avatar uploaded',
+                    user: userUpdated
+                });
+            });
+
+
+
         }
 
     },
