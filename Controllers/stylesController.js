@@ -142,14 +142,14 @@ var stylesController = {
         }
         // FIND PAGINATE
         Style.paginate({}, options, (err, styles) => {
-            if(err){
+            if (err) {
                 return res.status(500).send({
                     status: 'error',
                     message: 'Error on the request'
                 });
             }
 
-            if(!styles){
+            if (!styles) {
                 return res.status(404).send({
                     status: 'error not found',
                     message: 'There are nothing to show'
@@ -164,6 +164,38 @@ var stylesController = {
                 totalPages: styles.totalPages
             });
         });
+    },
+
+    getStylesByUser: (req, res) => {
+
+        // GET USER ID
+        var userId = req.params.user;
+        // FIND ALL STYLES OF THE USER
+        Style.find({
+            user: userId
+        }).sort([['date', 'descending']])
+            .exec((err, styles) => {
+                if (err) {
+                    return res.status(500).send({
+                        status: 'error',
+                        message: "Error getting this user's styles"
+                    });
+                }
+
+                if(!styles){
+                    return res.status(404).send({
+                        status: 'error',
+                        message: "There are not styles to show for this user"
+                    });
+                }
+                // RETURN RESULT
+
+                return res.status(200).send({
+                    status: 'success',
+                    styles: styles
+                });
+            })
+
     },
 };
 
