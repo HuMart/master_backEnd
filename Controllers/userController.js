@@ -238,8 +238,8 @@ var userController = {
                 return res.status(400).send({
                     status: 'error',
                     message: 'that file is not supported'
-                })
-            })
+                });
+            });
         } else {
             // CHECK ID OF THE USER IDENTIFIED
             var userId = req.user.sub;
@@ -258,11 +258,7 @@ var userController = {
                     user: userUpdated
                 });
             });
-
-
-
         }
-
     },
 
     avatar: (req, res) => {
