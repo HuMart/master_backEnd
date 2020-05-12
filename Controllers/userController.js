@@ -238,15 +238,15 @@ var userController = {
                 return res.status(400).send({
                     status: 'error',
                     message: 'that file is not supported'
-                })
-            })
+                });
+            });
         } else {
             // CHECK ID OF THE USER IDENTIFIED
             var userId = req.user.sub;
 
             // SEARCH AND UPDATE THE OBJECT IN DB
             User.findOneAndUpdate({ _id: userId }, { avatar: fileName }, { new: true }, (err, userUpdated) => {
-                if(err || !userUpdated){
+                if (err || !userUpdated) {
                     return res.status(500).send({
                         status: 'error',
                         message: 'Error uploading the image'
@@ -258,11 +258,56 @@ var userController = {
                     user: userUpdated
                 });
             });
-
-
-
         }
+    },
 
+    avatar: (req, res) => {
+        var fileName = req.params.fileName;
+
+        var filePath = './Uploads/users/' + fileName;
+
+        fs.exists(filePath, (exists) => {
+            if (exists) {
+                return res.sendFile(path.resolve(filePath));
+            } else {
+                return res.status(404).send({
+                    message: "Image doesn't exist"
+                })
+            }
+        });
+    },
+
+    getUsers: (req, res) => {
+        User.find().exec((err, users) => {
+            if (err || !users) {
+                return res.status(404).send({
+                    status: 'error',
+                    message: 'not users to show'
+                });
+
+            }
+            return res.status(200).send({
+                status: 'success',
+                users
+            });
+        });
+
+    },
+
+    getUser: (req, res) => {
+        var userId = req.params.userId;
+        User.findById(userId).exec((err, user) => {
+            if(err || !user){
+                return res.status(404).send({
+                    status: 'error',
+                    message: "user doesn't exist"
+                });
+            }
+            return res.status(200).send({
+                status: 'success',
+                user
+            });
+        });
     },
 };
 
