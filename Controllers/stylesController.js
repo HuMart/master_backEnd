@@ -182,7 +182,7 @@ var stylesController = {
                     });
                 }
 
-                if(!styles){
+                if (!styles) {
                     return res.status(404).send({
                         status: 'error',
                         message: "There are not styles to show for this user"
@@ -194,9 +194,36 @@ var stylesController = {
                     status: 'success',
                     styles: styles
                 });
-            })
-
+            });
     },
+
+    getStyle: (req, res) => {
+
+        var styleId = req.params.id;
+
+        Style.findById(styleId)
+            .populate('user')
+            .exec((err, style) => {
+                if (err) {
+                    return res.status(500).send({
+                        status: 'error',
+                        message: 'Error on the request'
+                    });
+                }
+                if(!style){
+                    return res.status(404).send({
+                        status: 'error',
+                        message: 'Ther are not style'
+                    });
+                }
+                return res.status(404).send({
+                    status: 'success',
+                    style: style
+                });
+
+            });
+
+    }
 };
 
 module.exports = stylesController;

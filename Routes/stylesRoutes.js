@@ -16,5 +16,6 @@ router.post('/upload-image/:id', [md_auth.authenticated, md_upload], stylesContr
 router.get('/image/:fileName', stylesController.image);
 router.get('/page/:page?', stylesController.getStyles);
 router.get('/user-styles/:user', stylesController.getStylesByUser);
+router.get('/style/:id', stylesController.getStyle);
 
 module.exports = router;
