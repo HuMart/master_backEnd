@@ -106,6 +106,22 @@ var stylesController = {
             });
         }
     },
+
+    image: (req, res) => {
+        var fileName = req.params.fileName;
+
+        var filePath = './Uploads/styles/' + fileName;
+
+        fs.exists(filePath, (exists) => {
+            if (exists) {
+                return res.sendFile(path.resolve(filePath));
+            } else {
+                return res.status(404).send({
+                    message: "Image doesn't exist"
+                })
+            }
+        });
+    },
 };
 
 module.exports = stylesController;
