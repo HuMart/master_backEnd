@@ -6,6 +6,7 @@ var fs = require('fs');
 var path = require('path');
 var jwt = require('../Services/jwt');
 
+
 var stylesController = {
     // TESTING METHOD
     test: (req, res) => {
@@ -34,6 +35,7 @@ var stylesController = {
             style.title = params.title;
             style.content = params.content;
             style.image = null;
+            style.user = req.user.sub;
 
             style.save((err, styleStored) => {
                 if (err || !styleStored) {
@@ -84,8 +86,8 @@ var stylesController = {
             });
         } else {
             var styleId = req.params.id;
-            
-            if(!styleId){
+
+            if (!styleId) {
                 return res.status(404).send({
                     status: 'error',
                     message: 'missing id'
@@ -120,6 +122,47 @@ var stylesController = {
                     message: "Image doesn't exist"
                 })
             }
+        });
+    },
+
+    getStyles: (req, res) => {
+
+        // GET CURRENT PAGE
+        if (req.params.page == null || req.params.page == undefined || req.params.page == false || req.params.page == 0 || req.params.page == "0") {
+            var page = 1;
+        } else {
+            var page = parseInt(req.params.page);
+        }
+        // CREATE OPTIONS OF PAGINATION
+        var options = {
+            sort: { date: -1 },
+            populate: 'user',
+            limit: 5,
+            page: page
+        }
+        // FIND PAGINATE
+        Style.paginate({}, options, (err, styles) => {
+            if(err){
+                return res.status(500).send({
+                    status: 'error',
+                    message: 'Error on the request'
+                });
+            }
+
+            if(!styles){
+                return res.status(404).send({
+                    status: 'error not found',
+                    message: 'There are nothing to show'
+                });
+            }
+
+            // RETURN (STYLES, TOTAL OF STYLES, NUMBER OF PAGES)
+            return res.status(200).send({
+                status: 'success',
+                styles: styles.docs,
+                totalDocs: styles.totalDocs,
+                totalPages: styles.totalPages
+            });
         });
     },
 };
