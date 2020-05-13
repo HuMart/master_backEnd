@@ -184,6 +184,29 @@ var userController = {
                     return res.status(200).send({
                         message: "That email is already in use",
                     });
+                } else {
+                    User.findOneAndUpdate({ _id: userId }, params, { new: true }, (err, userUpdated) => {
+
+                        if (err) {
+                            return res.status(500).send({
+                                status: 'error',
+                                message: 'error updating the user'
+                            });
+                        }
+
+                        if (!userUpdated) {
+                            return res.status(500).send({
+                                status: 'error',
+                                message: 'error Nothing to update'
+                            });
+                        }
+
+                        // RETURN RESPONSE
+                        return res.status(200).send({
+                            status: 'success',
+                            user: userUpdated
+                        });
+                    });
                 }
             });
         } else {
@@ -297,7 +320,7 @@ var userController = {
     getUser: (req, res) => {
         var userId = req.params.userId;
         User.findById(userId).exec((err, user) => {
-            if(err || !user){
+            if (err || !user) {
                 return res.status(404).send({
                     status: 'error',
                     message: "user doesn't exist"

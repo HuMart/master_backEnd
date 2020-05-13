@@ -1,6 +1,7 @@
 'use strict'
 
 var mongoose = require('mongoose');
+var paginate = require('mongoose-paginate-v2');
 var Schema = mongoose.Schema;
 
 var CommentSchema = Schema({
@@ -17,5 +18,8 @@ var StyleSchema = Schema({
     user: { type: Schema.ObjectId, ref: 'User' },
     comments: [CommentSchema]
 });
+
+// LOAD PAGINATION
+StyleSchema.plugin(paginate);
 
 module.exports = mongoose.model('Style', StyleSchema);

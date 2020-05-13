@@ -6,6 +6,7 @@ var fs = require('fs');
 var path = require('path');
 var jwt = require('../Services/jwt');
 
+
 var stylesController = {
     // TESTING METHOD
     test: (req, res) => {
@@ -34,6 +35,7 @@ var stylesController = {
             style.title = params.title;
             style.content = params.content;
             style.image = null;
+            style.user = req.user.sub;
 
             style.save((err, styleStored) => {
                 if (err || !styleStored) {
@@ -84,8 +86,8 @@ var stylesController = {
             });
         } else {
             var styleId = req.params.id;
-            
-            if(!styleId){
+
+            if (!styleId) {
                 return res.status(404).send({
                     status: 'error',
                     message: 'missing id'
@@ -105,6 +107,202 @@ var stylesController = {
                 });
             });
         }
+    },
+
+    image: (req, res) => {
+        var fileName = req.params.fileName;
+
+        var filePath = './Uploads/styles/' + fileName;
+
+        fs.exists(filePath, (exists) => {
+            if (exists) {
+                return res.sendFile(path.resolve(filePath));
+            } else {
+                return res.status(404).send({
+                    message: "Image doesn't exist"
+                })
+            }
+        });
+    },
+
+    getStyles: (req, res) => {
+
+        // GET CURRENT PAGE
+        if (req.params.page == null || req.params.page == undefined || req.params.page == false || req.params.page == 0 || req.params.page == "0") {
+            var page = 1;
+        } else {
+            var page = parseInt(req.params.page);
+        }
+        // CREATE OPTIONS OF PAGINATION
+        var options = {
+            sort: { date: -1 },
+            populate: 'user',
+            limit: 5,
+            page: page
+        }
+        // FIND PAGINATE
+        Style.paginate({}, options, (err, styles) => {
+            if (err) {
+                return res.status(500).send({
+                    status: 'error',
+                    message: 'Error on the request'
+                });
+            }
+
+            if (!styles) {
+                return res.status(404).send({
+                    status: 'error not found',
+                    message: 'There are nothing to show'
+                });
+            }
+
+            // RETURN (STYLES, TOTAL OF STYLES, NUMBER OF PAGES)
+            return res.status(200).send({
+                status: 'success',
+                styles: styles.docs,
+                totalDocs: styles.totalDocs,
+                totalPages: styles.totalPages
+            });
+        });
+    },
+
+    getStylesByUser: (req, res) => {
+
+        // GET USER ID
+        var userId = req.params.user;
+        // FIND ALL STYLES OF THE USER
+        Style.find({
+            user: userId
+        }).sort([['date', 'descending']])
+            .exec((err, styles) => {
+                if (err) {
+                    return res.status(500).send({
+                        status: 'error',
+                        message: "Error getting this user's styles"
+                    });
+                }
+
+                if (!styles) {
+                    return res.status(404).send({
+                        status: 'error',
+                        message: "There are not styles to show for this user"
+                    });
+                }
+                // RETURN RESULT
+
+                return res.status(200).send({
+                    status: 'success',
+                    styles: styles
+                });
+            });
+    },
+
+    getStyle: (req, res) => {
+
+        var styleId = req.params.id;
+
+        Style.findById(styleId)
+            .populate('user')
+            .exec((err, style) => {
+                if (err) {
+                    return res.status(500).send({
+                        status: 'error',
+                        message: 'Error on the request'
+                    });
+                }
+                if (!style) {
+                    return res.status(404).send({
+                        status: 'error',
+                        message: 'Ther are not style'
+                    });
+                }
+                return res.status(404).send({
+                    status: 'success',
+                    style: style
+                });
+
+            });
+
+    },
+
+    update: (req, res) => {
+
+        var styleId = req.params.id;
+        var params = req.body;
+        try {
+            var validateTitle = !validator.isEmpty(params.title);
+            var validateContent = !validator.isEmpty(params.content);
+        } catch (err) {
+            return res.status(404).send({
+                status: 'error',
+                message: 'error on the validation, missing data'
+            });
+        }
+
+        if (validateTitle && validateContent) {
+            var update = {
+                title: params.title,
+                content: params.content
+            };
+
+            Style.findOneAndUpdate({ _id: styleId, user: req.user.sub }, update, { new: true }, (err, styleUpdated) => {
+                if (err) {
+                    return res.status(500).send({
+                        status: 'error',
+                        message: 'Error updating...'
+                    });
+                }
+
+                if (!styleUpdated) {
+                    return res.status(404).send({
+                        status: 'error',
+                        message: 'There is not data to update'
+                    });
+                }
+                return res.status(200).send({
+                    status: 'success',
+                    style: styleUpdated
+                });
+            });
+
+        } else {
+            return res.status(200).send({
+                message: 'data validation is incorrect'
+            });
+        }
+
+
+
+
+    },
+
+    delete: (req, res) => {
+
+        var styleId = req.params.id;
+        var userId = req.user.sub;
+        console.log(userId)
+
+        Style.findByIdAndDelete({ _id: styleId, user: userId }, (err, styleDeleted) => {
+            if (err) {
+                return res.status(500).send({
+                    status: 'error',
+                    message: 'Error deleting the style'
+                });
+            }
+
+            if (!styleDeleted) {
+                return res.status(404).send({
+                    status: 'error',
+                    message: 'Ther is not style to delete, try again...'
+                });
+            }
+            return res.status(200).send({
+                status: 'success',
+                message: 'style deleted',
+                style: styleDeleted
+            });
+        })
+
     },
 };
 
