@@ -121,8 +121,54 @@ var commentController = {
     },
 
     delete: (req, res) => {
-        return res.status(200).send({
-            message: 'delete comment working'
+
+        // GET STYLE ID AND COMMENT ID FROM URL
+        var styleId = req.params.styleId;
+        var commentId = req.params.commentId;
+
+        // FIND STYLE
+        Style.findById(styleId, (err, style) => {
+
+            if (err) {
+                return res.status(500).send({
+                    status: 'error',
+                    message: 'Error deleting the comment'
+                });
+            }
+            if (!style) {
+                return res.status(404).send({
+                    status: 'error',
+                    message: 'Ther are no comment to delete'
+                });
+            }
+
+            // SELECT SUB-DOCUMENT COMMENT
+            var comment = style.comments.id(commentId);
+            // DELETE COMMENT
+            if (comment) {
+                comment.remove();
+            } else {
+                return res.status(404).send({
+                    status: 'error',
+                    message: 'Ther are no comment to delete'
+                });
+            }
+            // SAVE STYLE
+            style.save((err) => {
+
+                // RETURN RES
+                if (err) {
+                    return res.status(500).send({
+                        status: 'error',
+                        message: 'Error deleting the comment'
+                    });
+                }
+
+                return res.status(200).send({
+                    status: 'success',
+                    style
+                });
+            });
         });
     },
 };
