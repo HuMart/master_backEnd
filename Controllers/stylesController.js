@@ -210,7 +210,7 @@ var stylesController = {
                         message: 'Error on the request'
                     });
                 }
-                if(!style){
+                if (!style) {
                     return res.status(404).send({
                         status: 'error',
                         message: 'Ther are not style'
@@ -223,7 +223,85 @@ var stylesController = {
 
             });
 
-    }
+    },
+
+    update: (req, res) => {
+
+        var styleId = req.params.id;
+        var params = req.body;
+        try {
+            var validateTitle = !validator.isEmpty(params.title);
+            var validateContent = !validator.isEmpty(params.content);
+        } catch (err) {
+            return res.status(404).send({
+                status: 'error',
+                message: 'error on the validation, missing data'
+            });
+        }
+
+        if (validateTitle && validateContent) {
+            var update = {
+                title: params.title,
+                content: params.content
+            };
+
+            Style.findOneAndUpdate({ _id: styleId, user: req.user.sub }, update, { new: true }, (err, styleUpdated) => {
+                if (err) {
+                    return res.status(500).send({
+                        status: 'error',
+                        message: 'Error updating...'
+                    });
+                }
+
+                if (!styleUpdated) {
+                    return res.status(404).send({
+                        status: 'error',
+                        message: 'There is not data to update'
+                    });
+                }
+                return res.status(200).send({
+                    status: 'success',
+                    style: styleUpdated
+                });
+            });
+
+        } else {
+            return res.status(200).send({
+                message: 'data validation is incorrect'
+            });
+        }
+
+
+
+
+    },
+
+    delete: (req, res) => {
+
+        var styleId = req.params.id;
+
+        Style.findByIdAndDelete({ _id: styleId }, (err, styleDeleted) => {
+            if (err) {
+                return res.status(500).send({
+                    status: 'error',
+                    message: 'Error deleting the style'
+                });
+            }
+
+            if (!styleDeleted) {
+                return res.status(404).send({
+                    status: 'error',
+                    message: 'Ther is not style to delete, try again...'
+                });
+            }
+            return res.status(200).send({
+                status: 'success',
+                message: 'style deleted',
+                style: styleDeleted
+            });
+        })
+
+    },
 };
 
 module.exports = stylesController;

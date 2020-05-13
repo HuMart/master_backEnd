@@ -17,5 +17,7 @@ router.get('/image/:fileName', stylesController.image);
 router.get('/page/:page?', stylesController.getStyles);
 router.get('/user-styles/:user', stylesController.getStylesByUser);
 router.get('/style/:id', stylesController.getStyle);
+router.put('/style/:id', md_auth.authenticated, stylesController.update);
+router.delete('/style/:id', md_auth.authenticated, stylesController.delete);
 
 module.exports = router;
