@@ -52,7 +52,7 @@ var commentController = {
 
                 // SAVE THE STYLE 
                 style.save((err) => {
-                    if(err){
+                    if (err) {
                         return res.status(500).send({
                             status: 'error',
                             message: 'Error saving the comment !!'
@@ -73,9 +73,51 @@ var commentController = {
     },
 
     update: (req, res) => {
-        return res.status(200).send({
-            message: 'update comment working'
-        });
+
+        // GET COMMENT ID FROM URL
+        var commentId = req.params.commentId;
+
+        // GET DATA AND VALIDATE
+        var params = req.body;
+        try {
+            var validateContent = !validator.isEmpty(params.content);
+        } catch (err) {
+            return res.status(200).send({
+                status: 'error',
+                message: 'No comment added !!'
+            });
+        }
+
+        if (validateContent) {
+            // FIND AND UPDATE SUB-DOCUMENT
+            Style.findOneAndUpdate(
+                { 'comments._id': commentId },
+                {
+                    "$set": {
+                        "comments.$.content": params.content
+                    }
+                },
+                { new: true },
+                (err, styleUpdated) => {
+                    if (err) {
+                        return res.status(500).send({
+                            status: 'error',
+                            message: 'Error updating the comment'
+                        });
+                    }
+                    if (!styleUpdated) {
+                        return res.status(404).send({
+                            status: 'error',
+                            message: 'Ther are no comment to update'
+                        });
+                    }
+                    // RETURN RESPONSE
+                    return res.status(200).send({
+                        status: 'success',
+                        style: styleUpdated
+                    });
+                });
+        }
     },
 
     delete: (req, res) => {
