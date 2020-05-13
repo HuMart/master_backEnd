@@ -279,8 +279,10 @@ var stylesController = {
     delete: (req, res) => {
 
         var styleId = req.params.id;
+        var userId = req.user.sub;
+        console.log(userId)
 
-        Style.findByIdAndDelete({ _id: styleId }, (err, styleDeleted) => {
+        Style.findByIdAndDelete({ _id: styleId, user: userId }, (err, styleDeleted) => {
             if (err) {
                 return res.status(500).send({
                     status: 'error',
