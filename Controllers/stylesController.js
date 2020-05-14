@@ -315,7 +315,7 @@ var stylesController = {
                 { "content": { "$regex": str, "$options": "i" } }
             ]
         })
-            .sort(['date', 'descending'])
+            .sort([['date', 'descending']])
             .exec((err, styles) => {
                 if (err) {
                     return res.status(500).send({
