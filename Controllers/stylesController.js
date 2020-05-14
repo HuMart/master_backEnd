@@ -304,6 +304,37 @@ var stylesController = {
         })
 
     },
+
+    search: (req, res) => {
+
+        var str = req.params.search;
+
+        Style.find({
+            "$or": [
+                { "title": { "$regex": str, "$options": "i" } },
+                { "content": { "$regex": str, "$options": "i" } }
+            ]
+        })
+            .sort([['date', 'descending']])
+            .exec((err, styles) => {
+                if (err) {
+                    return res.status(500).send({
+                        status: 'error',
+                        message: 'Request error'
+                    });
+                }
+                if (!styles) {
+                    return res.status(404).send({
+                        status: 'error',
+                        message: 'there is not style'
+                    });
+                }
+                return res.status(200).send({
+                    status: 'success',
+                    styles
+                });
+            });
+    },
 };
 
 module.exports = stylesController;
