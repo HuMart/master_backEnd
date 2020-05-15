@@ -1,7 +1,8 @@
 'use strict'
+require('dotenv').config();
 var jwt = require('jwt-simple');
 var moment = require('moment');
-var secret = 'secret-password-to-generate-token-9999';
+var secret = process.env.SECRET_STRING;
 
 exports.authenticated = function(req, res, next) {
     // VALIDATE AUTHORIZATION HEADER
