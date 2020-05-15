@@ -13,7 +13,7 @@ mongoose.Promise = global.Promise;
 mongoose.connect('mongodb://127.0.0.1:27017/api_rest_node', { useNewUrlParser: true, useUnifiedTopology: true })
     .then(() => {
         app.listen(port, () => {
-            console.log("Server running in port: " + host + port);
+            console.log("Server running in port: " + port);
         });
     })
     .catch(err => {
